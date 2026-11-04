@@ -1,5 +1,6 @@
 import os
 import requests
+import json
 
 # 1. Read the key and email from environment variables
 api_key = os.environ["USAJOBS_KEY"]
@@ -27,5 +28,24 @@ data = response.json()
 # 6. Print how many jobs came back
 print("total jobs listed: " , data["SearchResult"]["SearchResultCount"])
 
-for job in data["SearchResult"]["SearchResultItems"]:#7. Print resutl of positionTitle
-    print(job["MatchedObjectDescriptor"]["PositionTitle"])
+first_job = data["SearchResult"]["SearchResultItems"][0]["MatchedObjectDescriptor"]# print first job in json file.
+#print(json.dumps(first_job, indent=4))#displays it in correct shape
+
+for item in data["SearchResult"]["SearchResultItems"]:
+    job_details = item["MatchedObjectDescriptor"]
+
+    record = {
+        "job_id": job_details["PositionID"],
+        "title": job_details["PositionTitle"],
+        "org": job_details["OrganizationName"],
+        "location": job_details["PositionLocationDisplay"],
+        "pay_min": int(job_details["PositionRemuneration"][0]["MinimumRange"]),
+        "pay_max": int(job_details["PositionRemuneration"][0]["MaximumRange"]),
+        "link": job_details["ApplyURI"][0], 
+        "closing_date": job_details["PositionEndDate"]
+    }
+
+    print(json.dumps(record, indent=4))
+
+    
+
