@@ -27,11 +27,12 @@ data = response.json()
 # 6. Print how many jobs came back
 print("total jobs listed: " , data["SearchResult"]["SearchResultCount"])
 
-def to_record(job):
+#create fucntion to return record of jobs
+def to_record(job): 
 
-    job_details = job["MatchedObjectDescriptor"]
+    job_details = job["MatchedObjectDescriptor"]#top branch of api
 
-    record = {
+    record = {#variables to return. 
         "job_id": job_details["PositionID"],
         "title": job_details["PositionTitle"],
         "org": job_details["OrganizationName"],
@@ -44,7 +45,7 @@ def to_record(job):
 
     return record
 
-job_list = data["SearchResult"]["SearchResultItems"]
+job_list = data["SearchResult"]["SearchResultItems"]#branches were variables live
 
 for job in job_list:
     record = to_record(job)
