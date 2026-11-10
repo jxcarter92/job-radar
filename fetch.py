@@ -1,7 +1,9 @@
 import os
 import requests
 import json
+from dotenv import load_dotenv
 
+load_dotenv()
 
 def fetch_jobs():
     # 1. Read the key and email from environment variables
