@@ -2,33 +2,38 @@ import os
 import requests
 import json
 
-# 1. Read the key and email from environment variables
-api_key = os.environ["USAJOBS_KEY"]
-email = os.environ["USAJOBS_EMAIL"]
 
-# 2. Headers: the same three you used with curl
-headers = {
-    "Host": "data.usajobs.gov",
-    "User-Agent": email,
-    "Authorization-Key": api_key,
-}
+def fetch_jobs():
+    # 1. Read the key and email from environment variables
+    api_key = os.environ["USAJOBS_KEY"]
+    email = os.environ["USAJOBS_EMAIL"]
 
-# 3. Search filters: the same as your URL, but as a dict
-params = {
-    "JobCategoryCode": 2210,
-    "LocationName": "Austin, Texas",
-}
+    # 2. Headers: the same three you used with curl
+    headers = {
+        "Host": "data.usajobs.gov",
+        "User-Agent": email,
+        "Authorization-Key": api_key,
+    }
 
-response = requests.get("https://data.usajobs.gov/api/search", headers=headers, params=params)
+    # 3. Search filters: the same as your URL, but as a dict
+    params = {
+        "JobCategoryCode": 2210,
+        "LocationName": "Austin, Texas",
+    }
 
-# 5. Turn the reply into a Python dict
-data = response.json()
+    response = requests.get("https://data.usajobs.gov/api/search", headers=headers, params=params)
 
-# 6. Print how many jobs came back
-print("total jobs listed: " , data["SearchResult"]["SearchResultCount"])
+    # 5. Turn the reply into a Python dict
+    data = response.json()
+    job_list = data["SearchResult"]["SearchResultItems"]
 
-#create fucntion to return record of jobs
-def to_record(job): 
+    # 6. Print how many jobs came back
+    print("total jobs listed: " , data["SearchResult"]["SearchResultCount"])
+
+    return job_list
+
+    
+def to_record(job): #create fucntion to return record of jobs
 
     job_details = job["MatchedObjectDescriptor"]#top branch of api
 
@@ -45,7 +50,7 @@ def to_record(job):
 
     return record
 
-job_list = data["SearchResult"]["SearchResultItems"]#branches were variables live
+job_list = fetch_jobs()#branches were variables live
 
 for job in job_list:
     record = to_record(job)
