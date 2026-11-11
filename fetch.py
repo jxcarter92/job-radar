@@ -39,13 +39,22 @@ def to_record(job): #create fucntion to return record of jobs
 
     job_details = job["MatchedObjectDescriptor"]#top branch of api
 
+    pay = job_details["PositionRemuneration"]# declare the list with pay variable
+
+    if pay:#dont need len(pay) since if pay is same as len() > 0
+        pay_min = int(float(pay[0]["MinimumRange"]))#one brance below
+        pay_max = int(float(pay[0]["MaximumRange"]))
+    else: 
+        pay_min = None
+        pay_max = None
+
     record = {#variables to return. 
         "job_id": job_details["PositionID"],
         "title": job_details["PositionTitle"],
         "org": job_details["OrganizationName"],
         "location": job_details["PositionLocationDisplay"],
-        "pay_min": int(float(job_details["PositionRemuneration"][0]["MinimumRange"])),
-        "pay_max": int(float(job_details["PositionRemuneration"][0]["MaximumRange"])),
+        "pay_min": pay_min,
+        "pay_max": pay_max,
         "link": job_details["ApplyURI"][0], 
         "closing_date": job_details["PositionEndDate"]
     }
