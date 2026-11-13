@@ -44,9 +44,11 @@ def to_record(job): #create fucntion to return record of jobs
     if pay:#dont need len(pay) since if pay is same as len() > 0
         pay_min = int(float(pay[0]["MinimumRange"]))#one brance below
         pay_max = int(float(pay[0]["MaximumRange"]))
+        pay_interval = pay[0]["RateIntervalCode"]
     else: 
         pay_min = None
         pay_max = None
+        pay_interval = None
 
     record = {#variables to return. 
         "job_id": job_details["PositionID"],
@@ -55,18 +57,34 @@ def to_record(job): #create fucntion to return record of jobs
         "location": job_details["PositionLocationDisplay"],
         "pay_min": pay_min,
         "pay_max": pay_max,
+        "pay_interval": pay_interval,
         "link": job_details["ApplyURI"][0], 
         "closing_date": job_details["PositionEndDate"]
     }
 
     return record
 
+def score_pay(record):#score system for max pay -> record is the parameter. Same naming convention used in to_record
+    pay_max = record["pay_max"]#varaible for max pay
+    pay_interval = record["pay_interval"]#variable for hourly pay
+
+    if pay_max is None:#is there any pay associated with job
+        return 5
+    if pay_interval == "PH":
+        pay_max = pay_max * 2080
+    if pay_max >= 120000:
+        return 10
+    if pay_max >= 100000:
+        return 6
+    else:
+        return 0
+
 job_list = fetch_jobs()#branches were variables live
 
-for job in job_list:
-    record = to_record(job)
-    print(json.dumps(record, indent=4))
-    
+for job in job_list:#conveyor belt moving one job at a time. ADD FUNCTIONS TO THIS PART!!!!
+    record = to_record(job)# 1. to_record builds a record and returns it
+    score = score_pay(record)#2. score_pay builds a rankning system to be returned
 
-    
+    print(record["title"], "->", score)# 3. the loop passes that record to score_pay. Prints title and score for pay
+    print(json.dumps(record, indent=4))#prints all records varaibles in API format
 
