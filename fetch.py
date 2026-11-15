@@ -50,11 +50,16 @@ def to_record(job): #create fucntion to return record of jobs
         pay_max = None
         pay_interval = None
 
+    cities = []
+    for location in job_details["PositionLocation"]:
+        cities.append(location["LocationName"])
+
     record = {#variables to return. 
         "job_id": job_details["PositionID"],
         "title": job_details["PositionTitle"],
         "org": job_details["OrganizationName"],
         "location": job_details["PositionLocationDisplay"],
+        "cities": cities,
         "pay_min": pay_min,
         "pay_max": pay_max,
         "pay_interval": pay_interval,
@@ -79,12 +84,41 @@ def score_pay(record):#score system for max pay -> record is the parameter. Same
     else:
         return 0
 
+def score_location(record):
+    cities = record["cities"]
+    locations = record["location"]
+    best_score = 0#start at 0 so if nothing matches it returns 0
+    best_match = None
+
+    if "remote" in locations.lower():#check inside of location for "remote"
+        best_score = max(best_score, 8)
+        best_match = "remote"
+
+    for city in cities:#check cities to match score system
+        city_lower = city.lower()
+
+        if "austin, texas" in city_lower and 10 > best_score:
+            best_score = 10
+            best_match = city
+        elif "remote" in city_lower and 8 > best_score:
+            best_score = 8
+            best_match = city
+        elif "new mexico" in city_lower and 5 > best_score:
+            best_score = 5
+            best_match = city
+        
+    return best_score, best_match#best score and city returns if found in the loop of cities
+    
+    
+
 job_list = fetch_jobs()#branches were variables live
 
 for job in job_list:#conveyor belt moving one job at a time. ADD FUNCTIONS TO THIS PART!!!!
     record = to_record(job)# 1. to_record builds a record and returns it
     score = score_pay(record)#2. score_pay builds a rankning system to be returned
-
-    print(record["title"], "->", score)# 3. the loop passes that record to score_pay. Prints title and score for pay
+    points, reason = score_location(record)#returning a tuple and unpacking
+    
+    print(record["title"])#title of job
+    print("  pay:", score, "| location:", points, "(", reason, ")")#display score for pay and location & and city of highest ranking score
     print(json.dumps(record, indent=4))#prints all records varaibles in API format
 
