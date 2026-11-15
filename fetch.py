@@ -97,14 +97,14 @@ def score_location(record):
     best_score = 0#start at 0 so if nothing matches it returns 0
     best_match = None
 
-    for text in cities + [location]:
+    for text in cities + [location]:#loop through LOCATION_POINTS
         text_lower = text.lower()
-        for place, points in LOCATION_POINTS.items():   # each rule: ("austin, texas", 10), ...
-            if place in text_lower and points > best_score:
+        for place, points in LOCATION_POINTS.items():   # each rule: ("austin, texas", 10), ... Key: Value in LOCATION_POINTS
+            if place in text_lower and points > best_score:#match city and score 
                 best_score = points
                 best_match = text
         
-    return best_score, best_match#best score and city returns if found in the loop of cities
+    return best_score, best_match#return best score and city 
     
     
 
