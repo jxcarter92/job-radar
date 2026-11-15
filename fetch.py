@@ -5,6 +5,13 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
+LOCATION_POINTS = {
+    "austin, texas": 10,
+    "remote": 8,
+    "new mexico": 5,
+    "location negotiable": 3,
+}
+
 def fetch_jobs():
     # 1. Read the key and email from environment variables
     api_key = os.environ["USAJOBS_KEY"]
@@ -86,26 +93,16 @@ def score_pay(record):#score system for max pay -> record is the parameter. Same
 
 def score_location(record):
     cities = record["cities"]
-    locations = record["location"]
+    location = record["location"]
     best_score = 0#start at 0 so if nothing matches it returns 0
     best_match = None
 
-    if "remote" in locations.lower():#check inside of location for "remote"
-        best_score = max(best_score, 8)
-        best_match = "remote"
-
-    for city in cities:#check cities to match score system
-        city_lower = city.lower()
-
-        if "austin, texas" in city_lower and 10 > best_score:
-            best_score = 10
-            best_match = city
-        elif "remote" in city_lower and 8 > best_score:
-            best_score = 8
-            best_match = city
-        elif "new mexico" in city_lower and 5 > best_score:
-            best_score = 5
-            best_match = city
+    for text in cities + [location]:
+        text_lower = text.lower()
+        for place, points in LOCATION_POINTS.items():   # each rule: ("austin, texas", 10), ...
+            if place in text_lower and points > best_score:
+                best_score = points
+                best_match = text
         
     return best_score, best_match#best score and city returns if found in the loop of cities
     
@@ -117,7 +114,7 @@ for job in job_list:#conveyor belt moving one job at a time. ADD FUNCTIONS TO TH
     record = to_record(job)# 1. to_record builds a record and returns it
     score = score_pay(record)#2. score_pay builds a rankning system to be returned
     points, reason = score_location(record)#returning a tuple and unpacking
-    
+
     print(record["title"])#title of job
     print("  pay:", score, "| location:", points, "(", reason, ")")#display score for pay and location & and city of highest ranking score
     print(json.dumps(record, indent=4))#prints all records varaibles in API format
