@@ -5,11 +5,24 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-LOCATION_POINTS = {
+#dicts to loop through in score_location(record) and score_keywords(record):
+LOCATION_POINTS = {#locations and their scores
     "austin, texas": 10,
     "remote": 8,
     "new mexico": 5,
     "location negotiable": 3,
+}
+
+KEYWORD_POINTS = {#title of jobs and their score 
+    "devsecops": 10,#top job search
+    "devops": 9,
+    "cloud": 8,
+    "software": 8,
+    "site reliability": 8,
+    "cybersecurity": 7,
+    "automation": 7,
+    "infrastructure": 7,
+    "platform": 7,
 }
 
 def fetch_jobs():
@@ -97,25 +110,38 @@ def score_location(record):
     best_score = 0#start at 0 so if nothing matches it returns 0
     best_match = None
 
-    for text in cities + [location]:#loop through LOCATION_POINTS
-        text_lower = text.lower()
-        for place, points in LOCATION_POINTS.items():   # each rule: ("austin, texas", 10), ... Key: Value in LOCATION_POINTS
-            if place in text_lower and points > best_score:#match city and score 
+    for text in cities + [location]:#loop through both cities and locations in records
+        text_lower = text.lower()#convert everything to lowercase
+        for place, points in LOCATION_POINTS.items():#loop through each: ("austin, texas", 10), ... Key: Value in LOCATION_POINTS
+            if place in text_lower and points > best_score:
                 best_score = points
                 best_match = text
         
     return best_score, best_match#return best score and city 
     
-    
+def score_keywords(record):
+    title = record["title"].lower()#convert to lowercase
+    best_score = 0
+    best_match = None
+
+    for keyword, points in KEYWORD_POINTS.items():#loop throug to find the match in job title and its score form KEYWORD_POINTS
+        if keyword in title and points > best_score:#conditions to match title and score
+            best_score = points
+            best_match = keyword
+
+    return best_score, best_match
+
+
 
 job_list = fetch_jobs()#branches were variables live
 
 for job in job_list:#conveyor belt moving one job at a time. ADD FUNCTIONS TO THIS PART!!!!
     record = to_record(job)# 1. to_record builds a record and returns it
-    score = score_pay(record)#2. score_pay builds a rankning system to be returned
+    pay_score = score_pay(record)#2. score_pay builds a rankning system to be returned
     points, reason = score_location(record)#returning a tuple and unpacking
+    kw_rating, kw_role = score_keywords(record)
 
     print(record["title"])#title of job
-    print("  pay:", score, "| location:", points, "(", reason, ")")#display score for pay and location & and city of highest ranking score
+    print("  pay:", pay_score, "| location:", points, "(", reason, ")", "| title:" , kw_rating, "(" , kw_role, ")")#print pay, location score, city, title score, keyword in title
     print(json.dumps(record, indent=4))#prints all records varaibles in API format
 
