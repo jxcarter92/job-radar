@@ -123,25 +123,40 @@ def score_keywords(record):
     title = record["title"].lower()#convert to lowercase
     best_score = 0
     best_match = None
-
+    
     for keyword, points in KEYWORD_POINTS.items():#loop throug to find the match in job title and its score form KEYWORD_POINTS
         if keyword in title and points > best_score:#conditions to match title and score
             best_score = points
             best_match = keyword
+                
+                
 
     return best_score, best_match
 
+results = []#empty list for variables I want displayed. 
 
+job_list = fetch_jobs()#
 
-job_list = fetch_jobs()#branches were variables live
+for job in job_list:#
+    record = to_record(job)#list of all the jobs and the vairiables I chose from the api
+    pay_score = score_pay(record)#score fucntion for jobs pay
+    loc_score, loc_match = score_location(record)#location match and score determind from LOCATION_POINTS
+    kw_score, kw_match = score_keywords(record)#keywords of the job title and score determind by KEYWORD_POINTS
+    total = pay_score + loc_score + kw_score#sum of all the scores
 
-for job in job_list:#conveyor belt moving one job at a time. ADD FUNCTIONS TO THIS PART!!!!
-    record = to_record(job)# 1. to_record builds a record and returns it
-    pay_score = score_pay(record)#2. score_pay builds a rankning system to be returned
-    points, reason = score_location(record)#returning a tuple and unpacking
-    kw_rating, kw_role = score_keywords(record)
+    results.append({#variables I want displayed 
+        "title": record["title"],
+        "total": total,
+        "pay": pay_score,
+        "location": loc_score,
+        "location_match": loc_match,
+        "keyword": kw_score,
+        "keyword_match": kw_match,
+        "link": record["link"],
+    })
 
-    print(record["title"])#title of job
-    print("  pay:", pay_score, "| location:", points, "(", reason, ")", "| title:" , kw_rating, "(" , kw_role, ")")#print pay, location score, city, title score, keyword in title
-    print(json.dumps(record, indent=4))#prints all records varaibles in API format
-
+ranked = sorted(results, key=lambda job: job["total"], reverse=True)#lambda one time helper like the key=key=lambda job: job["total"]. Small function instead of writine def get_total(job)
+for job in ranked[:5]:#return only 5 of the top jobs
+    print("total score for job:",job["total"], " ", job["title"])
+    print("    pay", job["pay"], "| location", job["location"], "(", job["location_match"], ")", "| keyword", job["keyword"], "(", job["keyword_match"], ")")
+    print("   ", job["link"])
