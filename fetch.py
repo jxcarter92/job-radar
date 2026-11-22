@@ -25,6 +25,16 @@ KEYWORD_POINTS = {#title of jobs and their score
     "platform": 7,
 }
 
+CLEARANCE_POINTS = {#values USA_JOBS lists their clearance level and my personal score for each
+    "top secret": 10,
+    "q-clearance": 10,
+    "secret": 8,
+    "sensitive compartmented information": 8,#sci higher on the same ladder. extra access on top of TS
+    "confidential": 5,
+    "not required": 3,
+    "other": 3,
+}
+
 def fetch_jobs():
     # 1. Read the key and email from environment variables
     api_key = os.environ["USAJOBS_KEY"]
@@ -60,6 +70,7 @@ def to_record(job): #create fucntion to return record of jobs
     job_details = job["MatchedObjectDescriptor"]#top branch of api
 
     pay = job_details["PositionRemuneration"]# declare the list with pay variable
+    clearance = job_details["UserArea"]["Details"]["SecurityClearance"]#security clearance is tucked a few levels deeper than any other variable so far. 
 
     if pay:#dont need len(pay) since if pay is same as len() > 0
         pay_min = int(float(pay[0]["MinimumRange"]))#one brance below
@@ -79,6 +90,7 @@ def to_record(job): #create fucntion to return record of jobs
         "title": job_details["PositionTitle"],
         "org": job_details["OrganizationName"],
         "location": job_details["PositionLocationDisplay"],
+        "clearance": clearance,
         "cities": cities,
         "pay_min": pay_min,
         "pay_max": pay_max,
@@ -129,7 +141,17 @@ def score_keywords(record):
             best_score = points
             best_match = keyword
                 
-                
+    return best_score, best_match
+
+def score_clearance(record):#same function as other score defs
+    clearance_level = record["clearance"].lower()
+    best_score = 0
+    best_match = None
+
+    for level, points in CLEARANCE_POINTS.items():
+        if level in clearance_level and points > best_score:
+            best_score = points
+            best_match = level
 
     return best_score, best_match
 
@@ -142,7 +164,8 @@ for job in job_list:#
     pay_score = score_pay(record)#score fucntion for jobs pay
     loc_score, loc_match = score_location(record)#location match and score determind from LOCATION_POINTS
     kw_score, kw_match = score_keywords(record)#keywords of the job title and score determind by KEYWORD_POINTS
-    total = pay_score + loc_score + kw_score#sum of all the scores
+    cl_score, cl_level = score_clearance(record)#clearance level and score determind by CLEARANVE_POINTS
+    total = pay_score + loc_score + kw_score + cl_score#sum of all the scores
 
     results.append({#variables I want displayed 
         "title": record["title"],
@@ -153,10 +176,12 @@ for job in job_list:#
         "keyword": kw_score,
         "keyword_match": kw_match,
         "link": record["link"],
+        "clearance": cl_score,
+        "clearance_level": cl_level,
     })
 
 ranked = sorted(results, key=lambda job: job["total"], reverse=True)#lambda one time helper like the key=key=lambda job: job["total"]. Small function instead of writine def get_total(job)
 for job in ranked[:5]:#return only 5 of the top jobs
     print("total score for job:",job["total"], " ", job["title"])
-    print("    pay", job["pay"], "| location", job["location"], "(", job["location_match"], ")", "| keyword", job["keyword"], "(", job["keyword_match"], ")")
+    print("    pay:", job["pay"], "| location:", job["location"], "(", job["location_match"], ")", "| keyword:", job["keyword"], "(", job["keyword_match"], ")", "| Clearance:",  job["clearance"], "(", job["clearance_level"], ")")#Clean print want to display PAY_VARiABLES better
     print("   ", job["link"])
