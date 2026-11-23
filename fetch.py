@@ -70,7 +70,7 @@ def to_record(job): #create fucntion to return record of jobs
     job_details = job["MatchedObjectDescriptor"]#top branch of api
 
     pay = job_details["PositionRemuneration"]# declare the list with pay variable
-    clearance = job_details["UserArea"]["Details"]["SecurityClearance"]#security clearance is tucked a few levels deeper than any other variable so far. 
+    clearance = job_details["UserArea"]["Details"].get("SecurityClearance")#security clearance is tucked a few levels deeper than any other variable so far. 
 
     if pay:#dont need len(pay) since if pay is same as len() > 0
         pay_min = int(float(pay[0]["MinimumRange"]))#one brance below
@@ -144,10 +144,13 @@ def score_keywords(record):
     return best_score, best_match
 
 def score_clearance(record):#same function as other score defs
-    clearance_level = record["clearance"].lower()
+    if record["clearance"] is None:#check if None is listed in the SecurityClearance
+            return 3, "not listed"#score and reason why
+    
+    clearance_level = record["clearance"].lower()#if there is a value create a variable
     best_score = 0
     best_match = None
-
+    
     for level, points in CLEARANCE_POINTS.items():
         if level in clearance_level and points > best_score:
             best_score = points
