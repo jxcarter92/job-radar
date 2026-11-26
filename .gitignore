@@ -1,5 +1,5 @@
 .venv/
 .env
 austin*.json
-
+__pycache__/
 

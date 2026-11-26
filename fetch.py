@@ -70,7 +70,7 @@ def to_record(job): #create fucntion to return record of jobs
     job_details = job["MatchedObjectDescriptor"]#top branch of api
 
     pay = job_details["PositionRemuneration"]# declare the list with pay variable
-    clearance = job_details["UserArea"]["Details"].get("SecurityClearance")#security clearance is tucked a few levels deeper than any other variable so far. 
+    clearance = job_details["UserArea"]["Details"].get("SecurityClearance")#security clearance is tucked a few levels deeper than any other variable so far .get() catches missing keys.
 
     if pay:#dont need len(pay) since if pay is same as len() > 0
         pay_min = int(float(pay[0]["MinimumRange"]))#one brance below
@@ -158,33 +158,38 @@ def score_clearance(record):#same function as other score defs
 
     return best_score, best_match
 
-results = []#empty list for variables I want displayed. 
+def main():
 
-job_list = fetch_jobs()#
+    results = []#empty list for variables I want displayed. 
 
-for job in job_list:#
-    record = to_record(job)#list of all the jobs and the vairiables I chose from the api
-    pay_score = score_pay(record)#score fucntion for jobs pay
-    loc_score, loc_match = score_location(record)#location match and score determind from LOCATION_POINTS
-    kw_score, kw_match = score_keywords(record)#keywords of the job title and score determind by KEYWORD_POINTS
-    cl_score, cl_level = score_clearance(record)#clearance level and score determind by CLEARANVE_POINTS
-    total = pay_score + loc_score + kw_score + cl_score#sum of all the scores
+    job_list = fetch_jobs()#
 
-    results.append({#variables I want displayed 
-        "title": record["title"],
-        "total": total,
-        "pay": pay_score,
-        "location": loc_score,
-        "location_match": loc_match,
-        "keyword": kw_score,
-        "keyword_match": kw_match,
-        "link": record["link"],
-        "clearance": cl_score,
-        "clearance_level": cl_level,
-    })
+    for job in job_list:#
+        record = to_record(job)#list of all the jobs and the vairiables I chose from the api
+        pay_score = score_pay(record)#score fucntion for jobs pay
+        loc_score, loc_match = score_location(record)#location match and score determind from LOCATION_POINTS
+        kw_score, kw_match = score_keywords(record)#keywords of the job title and score determind by KEYWORD_POINTS
+        cl_score, cl_level = score_clearance(record)#clearance level and score determind by CLEARANVE_POINTS
+        total = pay_score + loc_score + kw_score + cl_score#sum of all the scores
 
-ranked = sorted(results, key=lambda job: job["total"], reverse=True)#lambda one time helper like the key=key=lambda job: job["total"]. Small function instead of writine def get_total(job)
-for job in ranked[:5]:#return only 5 of the top jobs
-    print("total score for job:",job["total"], " ", job["title"])
-    print("    pay:", job["pay"], "| location:", job["location"], "(", job["location_match"], ")", "| keyword:", job["keyword"], "(", job["keyword_match"], ")", "| Clearance:",  job["clearance"], "(", job["clearance_level"], ")")#Clean print want to display PAY_VARiABLES better
-    print("   ", job["link"])
+        results.append({#variables I want displayed 
+            "title": record["title"],
+            "total": total,
+            "pay": pay_score,
+            "location": loc_score,
+            "location_match": loc_match,
+            "keyword": kw_score,
+            "keyword_match": kw_match,
+            "link": record["link"],
+            "clearance": cl_score,
+            "clearance_level": cl_level,
+        })
+
+    ranked = sorted(results, key=lambda job: job["total"], reverse=True)#lambda one time helper like the key=key=lambda job: job["total"]. Small function instead of writine def get_total(job)
+    for job in ranked[:5]:#return only 5 of the top jobs
+        print("total score for job:",job["total"], " ", job["title"])
+        print("    pay:", job["pay"], "| location:", job["location"], "(", job["location_match"], ")", "| keyword:", job["keyword"], "(", job["keyword_match"], ")", "| Clearance:",  job["clearance"], "(", job["clearance_level"], ")")#Clean print want to display PAY_VARiABLES better
+        print("   ", job["link"])
+
+if __name__ == "__main__":
+    main()
